@@ -22,7 +22,7 @@ export function SnippetDialog({
 }: SnippetDialogProps) {
   const [copied, setCopied] = useState(false)
 
-  const snippet = `<script src="https://your-consentvault-domain.com/recorder.js" data-site-key="${site.site_key}" async></script>`
+  const snippet = `<script src="https://v0-consentvault-app-shell-eight.vercel.app/recorder.js" data-site-key="${site.site_key}" async></script>`
 
   const handleCopySnippet = () => {
     navigator.clipboard.writeText(snippet).then(() => {
