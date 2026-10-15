@@ -22,11 +22,12 @@ export const config = {
      * - api (API routes, including session ingestion and screenshots)
      * - recorder.js (public tracking snippet)
      * - auth (Supabase auth callback/error routes)
+     * - sign/, onboard/ (public client e-sign and onboarding pages, opened from an emailed link)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
      */
-    '/((?!api|recorder.js|auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|recorder.js|auth|sign/|onboard/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

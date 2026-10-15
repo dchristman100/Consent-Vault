@@ -1,0 +1,107 @@
+/* ShiFt client pages (e-sign + onboarding). Brand: https://shiftnow.io/brand. Deliberately light: these are documents people sign and print. */
+.sx {
+  --ember: #FF8A3D; --ember-deep: #D96A1E; --ember-text: #B35A13; --ember-soft: #FFF1E6;
+  --mint: #3ECF9A; --good: #2F7D4F; --good-soft: #E7F5EC; --bad: #A8382C; --bad-soft: #FBECEA;
+  --night: #0F1117; --night2: #161B26; --white: #F4F7FB; --dim: #93A1B5;
+  --surface: #FAF8F5; --surface2: #FFFFFF; --surface3: #F0EDE8;
+  --ink: #1A1A18; --ink2: #4B4B48; --ink3: #78746E; --line: #E8E4DE;
+  color-scheme: light;
+  min-height: 100vh; background: var(--surface); color: var(--ink);
+  font-family: "Helvetica Neue", Arial, -apple-system, "Segoe UI", sans-serif; font-size: 16px; line-height: 1.55;
+}
+.sx * { box-sizing: border-box; }
+.sx-bar { background: var(--night); color: var(--white); padding: 14px max(16px, env(safe-area-inset-left, 0px)); }
+.sx-bar-in { max-width: 820px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sx-mark { font-weight: 800; font-size: 22px; letter-spacing: -0.02em; color: var(--white); }
+.sx-mark .f { color: var(--ember); }
+.sx-bar-note { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+.sx-main { max-width: 820px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-left, 0px)) 64px; display: grid; gap: 20px; }
+.sx-head h1 { font-size: clamp(24px, 4vw, 32px); line-height: 1.15; margin: 0 0 6px; letter-spacing: -0.015em; text-wrap: balance; }
+.sx-head p { margin: 0; color: var(--ink2); }
+.sx-steps { display: flex; gap: 8px; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
+.sx-steps li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink3); background: var(--surface2); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+.sx-steps li b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--surface3); color: var(--ink2); font-size: 12px; }
+.sx-steps li.on { color: var(--ink); border-color: var(--ember); }
+.sx-steps li.on b { background: var(--ember); color: #fff; }
+.sx-steps li.done b { background: var(--good); color: #fff; }
+.sx-card { background: var(--surface2); border: 1px solid var(--line); border-radius: 14px; padding: 24px; min-width: 0; }
+.sx-card h2 { font-size: 19px; margin: 0 0 4px; letter-spacing: -0.01em; }
+.sx-card .sub { color: var(--ink3); font-size: 14px; margin: 0 0 16px; }
+.sx-doc { font-size: 15px; color: var(--ink); overflow-wrap: anywhere; }
+.sx-doc h2 { font-size: 20px; margin: 26px 0 8px; }
+.sx-doc h3 { font-size: 17px; margin: 22px 0 6px; }
+.sx-doc h4, .sx-doc h5 { font-size: 15px; margin: 18px 0 4px; }
+.sx-doc p { margin: 0 0 12px; }
+.sx-doc ul, .sx-doc ol { margin: 0 0 12px; padding-left: 22px; }
+.sx-doc li { margin: 2px 0; }
+.sx-doc hr { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
+.sx-doc .tbl { overflow-x: auto; margin: 0 0 14px; }
+.sx-doc table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.sx-doc th, .sx-doc td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+.sx-doc th { background: var(--surface3); }
+.sx-doc-scroll { max-height: 62vh; overflow-y: auto; padding-right: 6px; }
+.sx-init { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 18px; padding: 12px 14px; border: 1px dashed var(--ember); border-radius: 10px; background: var(--ember-soft); }
+.sx-init label { font-weight: 600; font-size: 14px; }
+.sx-init input { width: 90px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.08em; text-align: center; }
+.sx-init.ok { border-style: solid; border-color: var(--good); background: var(--good-soft); }
+.sx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.sx-field { display: grid; gap: 6px; min-width: 0; }
+.sx-field > label, .sx-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+.sx-field .hint { font-size: 13px; color: var(--ink3); }
+.sx input[type=text], .sx input[type=email], .sx input[type=tel], .sx input[type=url], .sx input[type=number], .sx input[type=datetime-local], .sx textarea, .sx select {
+  width: 100%; font: inherit; font-size: 16px; color: var(--ink); background: #fff; border: 1px solid #D9D4CC; border-radius: 9px; padding: 10px 12px;
+}
+.sx textarea { min-height: 90px; resize: vertical; }
+.sx input:focus, .sx textarea:focus, .sx select:focus { outline: 2px solid var(--ember); outline-offset: 1px; border-color: var(--ember); }
+.sx-tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+.sx-tabs button { font: inherit; font-size: 14px; padding: 8px 16px; border: 0; background: #fff; color: var(--ink2); cursor: pointer; }
+.sx-tabs button[aria-pressed=true] { background: var(--night); color: var(--white); }
+.sx-pad { position: relative; border: 1px solid #D9D4CC; border-radius: 10px; background: #fff; touch-action: none; }
+.sx-pad canvas { display: block; width: 100%; height: 170px; cursor: crosshair; border-radius: 10px; }
+.sx-pad .line { position: absolute; left: 18px; right: 18px; bottom: 38px; border-top: 1px solid var(--line); pointer-events: none; }
+.sx-pad .x { position: absolute; left: 18px; bottom: 42px; color: var(--ink3); font-size: 18px; pointer-events: none; }
+.sx-pad .ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink3); font-size: 14px; pointer-events: none; }
+.sx-typed { min-height: 120px; display: grid; place-items: center; border: 1px solid #D9D4CC; border-radius: 10px; background: #fff; font-size: 44px; color: var(--ink); padding: 8px 16px; text-align: center; overflow: hidden; }
+.sx-check { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+.sx-check input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--ember-deep); flex: none; }
+.sx-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.sx-btn { font: inherit; font-weight: 700; font-size: 16px; border: 0; border-radius: 10px; padding: 13px 22px; background: var(--ember); color: #1A1A18; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+.sx-btn:hover { background: var(--ember-deep); color: #fff; }
+.sx-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.sx-btn.ghost { background: #fff; color: var(--ink); border: 1px solid #D9D4CC; }
+.sx-btn.small { padding: 7px 12px; font-size: 14px; font-weight: 600; }
+.sx-link { color: var(--ember-text); font-weight: 600; }
+.sx-msg { font-size: 14px; padding: 10px 12px; border-radius: 9px; }
+.sx-msg.err { background: var(--bad-soft); color: var(--bad); }
+.sx-msg.ok { background: var(--good-soft); color: var(--good); }
+.sx-kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; font-size: 14px; margin: 0; }
+.sx-kv dt { color: var(--ink3); }
+.sx-kv dd { margin: 0; overflow-wrap: anywhere; }
+.sx-sigimg { max-width: 280px; max-height: 90px; display: block; }
+.sx-sigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+.sx-sig { border-top: 2px solid var(--ink); padding-top: 8px; font-size: 14px; }
+.sx-sig .who { font-weight: 700; }
+.sx-cert { font-size: 13px; color: var(--ink2); }
+.sx-cert code { font-family: SFMono-Regular, Consolas, Menlo, monospace; font-size: 12px; word-break: break-all; }
+.sx-foot { color: var(--ink3); font-size: 12px; text-align: center; }
+.sx-req { color: var(--ember-text); }
+.sx-opts { display: flex; gap: 8px; flex-wrap: wrap; }
+.sx-opt { display: inline-flex; align-items: center; gap: 8px; border: 1px solid #D9D4CC; border-radius: 9px; padding: 8px 12px; background: #fff; cursor: pointer; font-size: 15px; }
+.sx-opt input { accent-color: var(--ember-deep); }
+.sx-opt:has(input:checked) { border-color: var(--ember); background: var(--ember-soft); }
+.sx-note { border-left: 3px solid var(--ember); background: var(--ember-soft); padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: 14px; }
+.sx-progress { height: 6px; border-radius: 99px; background: var(--surface3); overflow: hidden; }
+.sx-progress span { display: block; height: 100%; background: var(--ember); }
+@media print {
+  .sx-bar, .sx-noprint { display: none !important; }
+  .sx { background: #fff; }
+  .sx-card { border: 0; padding: 0; }
+  .sx-doc-scroll { max-height: none; overflow: visible; }
+}
+/* Tailwind preflight resets headings and lists; restore document typography inside these pages. */
+.sx h1, .sx h2, .sx h3, .sx h4 { font-weight: 700; }
+.sx-head h1 { font-weight: 800; }
+.sx-doc ul { list-style: disc; }
+.sx-doc ol { list-style: decimal; }
+.sx-doc li::marker { color: var(--ink3); }
+.sx-doc strong { font-weight: 700; }
