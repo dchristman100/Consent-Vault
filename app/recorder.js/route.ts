@@ -119,6 +119,9 @@ export async function GET() {
     }
   }
 
+  // Expose the live session id so a host page (e.g. the e-sign page) can bind it to its own record.
+  window.ConsentVault = Object.assign(window.ConsentVault || {}, { getSessionId: function () { return sessionId; } });
+
   // Start session
   async function startSession() {
     sessionId = generateSessionId();
@@ -295,6 +298,8 @@ export async function GET() {
       document.addEventListener('click', (e) => {
         const target = e.target;
         if (!target || typeof target.closest !== 'function') return;
+        // Controls marked data-cv-ignore (e.g. signature-pad tabs, Clear) never finalize the session.
+        if (target.closest('[data-cv-ignore]')) return;
 
         // Match by visible button text (the CTA on vsl.rooferfuel.ai).
         const textEl = target.closest('button, a, input, [role="button"]');
