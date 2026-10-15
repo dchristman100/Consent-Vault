@@ -1,20 +1,16 @@
 import { Sidebar } from '@/components/sidebar'
-import { createClient } from '@/lib/supabase/server'
+import { auth } from '@/lib/auth'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // Fetch the currently logged-in user to show their name in the navbar.
-  const supabase = await createClient()
-  let displayName = 'Admin'
-  if (supabase) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    displayName = user?.email?.split('@')[0] || 'Admin'
-  }
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session) redirect('/login')
+  const displayName = session.user.name || session.user.email.split('@')[0]
   const initial = displayName.charAt(0).toUpperCase()
 
   return (

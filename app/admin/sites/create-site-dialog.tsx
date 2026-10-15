@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
+import { createClient } from '@/lib/vault-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,7 +13,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { generateSiteKey } from '@/lib/utils/sites'
 
 interface CreateSiteDialogProps {
   open: boolean
@@ -29,12 +28,7 @@ export function CreateSiteDialog({
   const [siteName, setSiteName] = useState('')
   const [domain, setDomain] = useState('')
   const [loading, setLoading] = useState(false)
-  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null)
-
-  // Initialize Supabase client on mount
-  useEffect(() => {
-    setSupabase(createClient())
-  }, [])
+  const vault = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,33 +43,17 @@ export function CreateSiteDialog({
       return
     }
 
-    if (!supabase) {
-      toast.error('Supabase not initialized')
+    if (!vault) {
+      toast.error('Please wait for the form to finish loading.')
       return
     }
 
     try {
       setLoading(true)
 
-      // Get authenticated user
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser()
-
-      if (authError || !user) {
-        console.error('[v0] Auth error:', authError)
-        throw new Error('Not authenticated. Please log in.')
-      }
-
-      const siteKey = generateSiteKey(siteName)
-
-      const { error } = await supabase.from('sites').insert({
+      const { error } = await vault.from('sites').insert({
         site_name: siteName,
         domain,
-        site_key: siteKey,
-        status: 'active',
-        user_id: user.id,
       })
 
       if (error) {

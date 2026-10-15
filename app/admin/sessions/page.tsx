@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
+import useSWR from 'swr'
+import { createClient } from '@/lib/vault-client'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,34 +48,23 @@ interface Session {
 }
 
 export default function SessionsPage() {
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [loading, setLoading] = useState(true)
-  const [sites, setSites] = useState<Array<{ id: string; site_name: string }>>([])
-  
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [siteFilter, setSiteFilter] = useState('all')
   const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null })
   
-  // Stats
-  const [stats, setStats] = useState({
-    total: 0,
-    recording: 0,
-    completed: 0,
-    today: 0,
-  })
-
   // Delete confirmation state
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null)
 
-  const supabase = createClient()
+  const vault = createClient()
 
   // Delete a session and remove it from the table without a reload
   const handleDeleteSession = async () => {
-    if (!supabase || !sessionToDelete) return
+    if (!vault || !sessionToDelete) return
 
-    const { error } = await supabase
+    const { error } = await vault
       .from('sessions')
       .delete()
       .eq('id', sessionToDelete.id)
@@ -85,105 +75,39 @@ export default function SessionsPage() {
       throw error
     }
 
-    setSessions((prev) => prev.filter((s) => s.id !== sessionToDelete.id))
+    await mutate()
     toast.success('Session deleted successfully')
   }
 
-  // Fetch sessions with joins
-  const fetchSessions = useCallback(async () => {
-    if (!supabase) return
-
-    setLoading(true)
-    try {
-      let query = supabase
-        .from('sessions')
-        .select(`
-          *,
-          sites (site_name)
-        `)
-        .order('started_at', { ascending: false })
-
-      // Apply filters
-      if (statusFilter && statusFilter !== 'all') {
-        query = query.eq('status', statusFilter)
-      }
-
-      if (siteFilter && siteFilter !== 'all') {
-        query = query.eq('site_id', siteFilter)
-      }
-
+  const { data: allSessions = [], error: sessionsError, isLoading: loading, mutate } = useSWR<Session[]>(
+    ['vault-sessions', statusFilter, siteFilter],
+    async () => {
+      let query = vault.from('sessions').select('*, sites (site_name)').order('started_at', { ascending: false })
+      if (statusFilter !== 'all') query = query.eq('status', statusFilter)
+      if (siteFilter !== 'all') query = query.eq('site_id', siteFilter)
       const { data, error } = await query
-
-      if (error) {
-        console.error('Error fetching sessions:', error)
-        return
-      }
-
-      // Debug: Log raw sessions data
-      console.log('[v0] Sessions data loaded:', data?.length, 'records')
-
-      let filtered = data || []
-
-      // Client-side search filter
-      if (searchTerm) {
-        filtered = filtered.filter(
-          (session) =>
-            session.visitor_id.includes(searchTerm) ||
-            session.page_url?.includes(searchTerm)
-        )
-      }
-
-      // Client-side date range filter
-      if (dateRange.from && dateRange.to) {
-        filtered = filtered.filter((session) => {
-          const startDate = new Date(session.started_at)
-          return startDate >= dateRange.from && startDate <= dateRange.to
-        })
-      }
-
-      setSessions(filtered)
-
-      // Calculate stats
-      const allSessions = data || []
-      setStats({
-        total: allSessions.length,
-        recording: allSessions.filter((s) => s.status === 'recording').length,
-        completed: allSessions.filter((s) => s.status === 'completed' || s.status === 'finalized').length,
-        today: allSessions.filter((s) => isSessionToday(s.started_at)).length,
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [supabase, statusFilter, siteFilter, searchTerm, dateRange])
-
-  // Fetch sites
-  const fetchSites = useCallback(async () => {
-    if (!supabase) return
-
-    try {
-      const { data, error } = await supabase.from('sites').select('id, site_name')
-      if (!error) {
-        setSites(data || [])
-      }
-    } catch (err) {
-      console.error('Error fetching sites:', err)
-    }
-  }, [supabase])
-
-  // Initial fetch
-  useEffect(() => {
-    fetchSites()
-    fetchSessions()
-  }, [fetchSessions, fetchSites])
-
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchSessions()
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [fetchSessions])
+      if (error) throw error
+      return data || []
+    },
+    { refreshInterval: 30000 },
+  )
+  const { data: sites = [], error: sitesError } = useSWR<Array<{ id: string; site_name: string }>>('vault-sites', async () => {
+    const { data, error } = await vault.from('sites').select('id, site_name')
+    if (error) throw error
+    return data || []
+  })
+  const sessions = allSessions.filter((session) => {
+    const matchesSearch = !searchTerm || session.visitor_id.includes(searchTerm) || session.page_url?.includes(searchTerm)
+    const { from, to } = dateRange
+    const started = new Date(session.started_at)
+    return matchesSearch && (!from || !to || (started >= from && started <= to))
+  })
+  const stats = {
+    total: allSessions.length,
+    recording: allSessions.filter((s) => s.status === 'recording').length,
+    completed: allSessions.filter((s) => s.status === 'completed' || s.status === 'finalized').length,
+    today: allSessions.filter((s) => isSessionToday(s.started_at)).length,
+  }
 
   const handleClearFilters = () => {
     setSearchTerm('')
@@ -257,7 +181,7 @@ export default function SessionsPage() {
         <div className="bg-white border border-slate-200 rounded-xl p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium text-slate-600">Today's Sessions</p>
+              <p className="text-sm font-medium text-slate-600">Today&apos;s Sessions</p>
               <p className="text-[28px] font-semibold text-slate-900 mt-3 leading-tight">{stats.today}</p>
             </div>
             <div className="bg-purple-100 rounded-xl p-2.5 flex items-center justify-center">
@@ -296,7 +220,7 @@ export default function SessionsPage() {
             {/* Status Filter */}
             <div className="flex-1">
               <label className="block text-xs font-medium text-slate-500 mb-1.5">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value ?? 'all')}>
                 <SelectTrigger className="h-10 w-full rounded-lg border-slate-200 px-3 text-sm">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
@@ -313,7 +237,7 @@ export default function SessionsPage() {
             {/* Site Filter */}
             <div className="flex-1">
               <label className="block text-xs font-medium text-slate-500 mb-1.5">Site</label>
-              <Select value={siteFilter} onValueChange={setSiteFilter}>
+              <Select value={siteFilter} onValueChange={(value) => setSiteFilter(value ?? 'all')}>
                 <SelectTrigger className="h-10 w-full rounded-lg border-slate-200 px-3 text-sm">
                   <SelectValue placeholder="All Sites" />
                 </SelectTrigger>
