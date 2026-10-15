@@ -1,11 +1,6 @@
 export const runtime = 'nodejs'
 
 export async function GET() {
-  // Determine the correct APP_URL for API calls
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL 
-    || (process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : '')
-    || 'https://v0-consentvault-app-shell-eight.vercel.app';
-
   const recorderScript = `
 (function() {
   // Configuration
@@ -19,10 +14,11 @@ export async function GET() {
     return;
   }
 
-  const APP_URL = '${appUrl}';
+  const APP_URL = new URL(script.src).origin;
   const apiBaseUrl = APP_URL;
   console.log('[ConsentVault] API base URL:', APP_URL);
   let sessionId = '';
+  let uploadToken = '';
   let batchNumber = 0;
   let eventBatch = [];
   let rrwebInstance = null;
@@ -52,7 +48,7 @@ export async function GET() {
       const response = await fetch(\`\${apiBaseUrl}/api/sessions\${endpoint}\`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, upload_token: uploadToken }),
         keepalive: useKeepalive,
       });
       if (!response.ok) {
@@ -110,6 +106,7 @@ export async function GET() {
           session_id: sessionId,
           site_key: siteKey,
           screenshot: imageBase64,
+          upload_token: uploadToken,
           captured_at: new Date().toISOString(),
         }),
       });
@@ -129,13 +126,15 @@ export async function GET() {
     batchNumber = 0;
     eventBatch = [];
     originalUrl = window.location.href; // capture for URL-change detection
-    await apiCall('/start', {
+    const result = await apiCall('/start', {
       site_key: siteKey,
       session_id: sessionId,
       page_url: window.location.href,
       referrer: document.referrer,
     });
-    console.log('[ConsentVault] Session started:', sessionId);
+    if (!result?.session_id || !result?.upload_token) throw new Error('Unable to start recording');
+    sessionId = result.session_id;
+    uploadToken = result.upload_token;
   }
 
   // Send event batch

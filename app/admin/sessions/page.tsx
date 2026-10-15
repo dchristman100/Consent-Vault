@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/vault-client'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -68,13 +68,13 @@ export default function SessionsPage() {
   // Delete confirmation state
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null)
 
-  const supabase = createClient()
+  const vault = createClient()
 
   // Delete a session and remove it from the table without a reload
   const handleDeleteSession = async () => {
-    if (!supabase || !sessionToDelete) return
+    if (!vault || !sessionToDelete) return
 
-    const { error } = await supabase
+    const { error } = await vault
       .from('sessions')
       .delete()
       .eq('id', sessionToDelete.id)
@@ -91,11 +91,11 @@ export default function SessionsPage() {
 
   // Fetch sessions with joins
   const fetchSessions = useCallback(async () => {
-    if (!supabase) return
+    if (!vault) return
 
     setLoading(true)
     try {
-      let query = supabase
+      let query = vault
         .from('sessions')
         .select(`
           *,
@@ -122,7 +122,7 @@ export default function SessionsPage() {
       // Debug: Log raw sessions data
       console.log('[v0] Sessions data loaded:', data?.length, 'records')
 
-      let filtered = data || []
+      let filtered: Session[] = data || []
 
       // Client-side search filter
       if (searchTerm) {
@@ -134,17 +134,18 @@ export default function SessionsPage() {
       }
 
       // Client-side date range filter
-      if (dateRange.from && dateRange.to) {
+      const { from, to } = dateRange
+      if (from && to) {
         filtered = filtered.filter((session) => {
           const startDate = new Date(session.started_at)
-          return startDate >= dateRange.from && startDate <= dateRange.to
+          return startDate >= from && startDate <= to
         })
       }
 
       setSessions(filtered)
 
       // Calculate stats
-      const allSessions = data || []
+      const allSessions: Session[] = data || []
       setStats({
         total: allSessions.length,
         recording: allSessions.filter((s) => s.status === 'recording').length,
@@ -154,21 +155,21 @@ export default function SessionsPage() {
     } finally {
       setLoading(false)
     }
-  }, [supabase, statusFilter, siteFilter, searchTerm, dateRange])
+  }, [vault, statusFilter, siteFilter, searchTerm, dateRange])
 
   // Fetch sites
   const fetchSites = useCallback(async () => {
-    if (!supabase) return
+    if (!vault) return
 
     try {
-      const { data, error } = await supabase.from('sites').select('id, site_name')
+      const { data, error } = await vault.from('sites').select('id, site_name')
       if (!error) {
         setSites(data || [])
       }
     } catch (err) {
       console.error('Error fetching sites:', err)
     }
-  }, [supabase])
+  }, [vault])
 
   // Initial fetch
   useEffect(() => {
@@ -296,7 +297,7 @@ export default function SessionsPage() {
             {/* Status Filter */}
             <div className="flex-1">
               <label className="block text-xs font-medium text-slate-500 mb-1.5">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value ?? 'all')}>
                 <SelectTrigger className="h-10 w-full rounded-lg border-slate-200 px-3 text-sm">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
@@ -313,7 +314,7 @@ export default function SessionsPage() {
             {/* Site Filter */}
             <div className="flex-1">
               <label className="block text-xs font-medium text-slate-500 mb-1.5">Site</label>
-              <Select value={siteFilter} onValueChange={setSiteFilter}>
+              <Select value={siteFilter} onValueChange={(value) => setSiteFilter(value ?? 'all')}>
                 <SelectTrigger className="h-10 w-full rounded-lg border-slate-200 px-3 text-sm">
                   <SelectValue placeholder="All Sites" />
                 </SelectTrigger>

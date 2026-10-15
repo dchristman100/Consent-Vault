@@ -1,5 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { pool } from '@/lib/db'
+import nodemailer from 'nodemailer'
+import { after } from 'next/server'
 
 export const auth = betterAuth({
   database: pool,
@@ -10,7 +12,29 @@ export const auth = betterAuth({
       : process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_URL}`
         : process.env.V0_RUNTIME_URL),
-  emailAndPassword: { enabled: true, autoSignIn: true },
+  emailAndPassword: {
+    enabled: true,
+    autoSignIn: true,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      after(async () => {
+        try {
+          const transport = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: Number(process.env.SMTP_PORT || 587),
+            secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
+            auth: { user: process.env.SMTP_USER || process.env.SMTP_FROM_EMAIL, pass: process.env.SMTP_PASSWORD || process.env.SMTP_PASS },
+          })
+          await transport.sendMail({
+            from: process.env.SMTP_FROM_EMAIL || process.env.SMTP_FROM,
+            to: user.email,
+            subject: 'Reset your ConsentVault password',
+            text: `Use this link to reset your password: ${url}\nIf you did not request this, ignore this message.`,
+          })
+        } catch (error) { console.error('Password recovery email failed', error) }
+      })
+    },
+  },
   trustedOrigins: [
     ...(process.env.NODE_ENV === 'development'
       ? ['http://localhost:3000', ...[

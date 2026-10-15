@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
@@ -15,43 +15,8 @@ function ResetPasswordContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [validating, setValidating] = useState(true)
-  const [tokenValid, setTokenValid] = useState(false)
-
-  useEffect(() => {
-    // Validate token on mount
-    if (!token) {
-      setError('Invalid reset link. Please request a new password reset.')
-      setValidating(false)
-      return
-    }
-
-    const validateToken = async () => {
-      try {
-        const response = await fetch('/api/auth/verify-reset-token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token }),
-        })
-
-        if (response.ok) {
-          setTokenValid(true)
-        } else {
-          const data = await response.json()
-          setError(data.error || 'Invalid or expired reset link.')
-        }
-      } catch (err) {
-        console.error('Error validating token:', err)
-        setError('Failed to validate reset link. Please try again.')
-      } finally {
-        setValidating(false)
-      }
-    }
-
-    validateToken()
-  }, [token])
+  const validating = false
+  const tokenValid = Boolean(token) && !searchParams.get('error')
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,7 +44,7 @@ function ResetPasswordContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, newPassword: password }),
       })
 
       if (!response.ok) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/vault-client'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -70,13 +70,13 @@ export default function SessionReplayPage() {
   const [generatingPDF, setGeneratingPDF] = useState(false)
   const [screenshot, setScreenshot] = useState<{ screenshot_url: string; captured_at: string | null } | null>(null)
 
-  const supabase = createClient()
+  const vault = createClient()
 
   // Delete the current session and redirect back to the list
   const handleDeleteSession = async () => {
-    if (!supabase || !session) return
+    if (!vault || !session) return
 
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await vault
       .from('sessions')
       .delete()
       .eq('id', session.id)
@@ -278,7 +278,7 @@ export default function SessionReplayPage() {
         return
       }
 
-      if (!supabase) {
+      if (!vault) {
         setError('Database not configured')
         setLoading(false)
         return
@@ -286,7 +286,7 @@ export default function SessionReplayPage() {
 
       try {
         // Fetch session metadata
-        const { data: sessionData, error: sessionError } = await supabase
+        const { data: sessionData, error: sessionError } = await vault
           .from('sessions')
           .select(
             `
@@ -311,7 +311,7 @@ export default function SessionReplayPage() {
         const realSessionId = sessionData.session_id
 
         // Fetch the most recent form-submission screenshot for this session.
-        const { data: screenshotData } = await supabase
+        const { data: screenshotData } = await vault
           .from('screenshots')
           .select('screenshot_url, captured_at')
           .eq('session_id', realSessionId)
@@ -320,7 +320,7 @@ export default function SessionReplayPage() {
           .maybeSingle()
         if (screenshotData) setScreenshot(screenshotData)
 
-        const { data: batchData } = await supabase
+        const { data: batchData } = await vault
           .from('session_event_batches')
           .select('*')
           .eq('session_id', realSessionId)
@@ -359,7 +359,7 @@ export default function SessionReplayPage() {
     }
 
     fetchSessionData()
-  }, [supabase, sessionId])
+  }, [vault, sessionId])
 
   // Initialize rrweb-player
   useEffect(() => {

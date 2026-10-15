@@ -14,12 +14,12 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch('/api/auth/request-password-reset', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, redirectTo: `${window.location.origin}/reset-password` }),
       })
 
       if (!response.ok) {
@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
 
         {submitted ? (
           <p className="text-center text-sm text-slate-600 leading-relaxed mb-6">
-            A password reset link has been sent to your email. Please check your inbox.
+            If an account exists for that address, you will receive a password reset link.
           </p>
         ) : (
           <>

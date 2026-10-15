@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/vault-client'
 import { useRouter, usePathname } from 'next/navigation'
 import { LogOut, BarChart3, Globe } from 'lucide-react'
 import Link from 'next/link'
@@ -11,8 +11,8 @@ export function Sidebar() {
   const pathname = usePathname()
 
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    const vault = createClient()
+    await vault.auth.signOut()
     router.push('/login')
   }
 

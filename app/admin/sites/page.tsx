@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
+import useSWR from 'swr'
+import { createClient } from '@/lib/vault-client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -30,44 +31,17 @@ interface Site {
 }
 
 export default function SitesPage() {
-  const [sites, setSites] = useState<Site[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null)
+  const vault = createClient()
+  const { data: sites = [], error: fetchError, isLoading: loading, mutate: fetchSites } = useSWR<Site[]>('vault-sites', async () => {
+    const result = await vault.from('sites').select('*')
+    if (result.error) throw result.error
+    return result.data
+  })
+  const error = fetchError?.message
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [selectedSite, setSelectedSite] = useState<Site | null>(null)
   const [showSnippetDialog, setShowSnippetDialog] = useState(false)
   const [siteToDelete, setSiteToDelete] = useState<Site | null>(null)
-
-  useEffect(() => {
-    setSupabase(createClient())
-  }, [])
-
-  useEffect(() => {
-    if (!supabase) return
-    fetchSites()
-  }, [supabase])
-
-  const fetchSites = async () => {
-    if (!supabase) return
-    try {
-      setLoading(true)
-      setError(null)
-      const { data, error: fetchError } = await supabase
-        .from('sites')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (fetchError) throw fetchError
-      setSites(data || [])
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch sites'
-      setError(message)
-      toast.error(message)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSiteCreated = () => {
     setShowCreateDialog(false)
@@ -80,9 +54,9 @@ export default function SitesPage() {
   }
 
   const handleDeleteSite = async () => {
-    if (!supabase || !siteToDelete) return
+    if (!vault || !siteToDelete) return
 
-    const { error } = await supabase
+    const { error } = await vault
       .from('sites')
       .delete()
       .eq('id', siteToDelete.id)
@@ -93,7 +67,7 @@ export default function SitesPage() {
       throw error
     }
 
-    setSites((prev) => prev.filter((s) => s.id !== siteToDelete.id))
+    await fetchSites()
     toast.success('Site deleted successfully')
   }
 
