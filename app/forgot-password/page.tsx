@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, redirectTo: `${window.location.origin}/reset-password` }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), redirectTo: `${window.location.origin}/reset-password` }),
       })
 
       if (!response.ok) {
@@ -85,6 +85,7 @@ export default function ForgotPasswordPage() {
                 <input
                   id="email"
                   type="email"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"

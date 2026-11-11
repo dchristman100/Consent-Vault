@@ -36,6 +36,12 @@ export const auth = betterAuth({
     },
   },
   trustedOrigins: [
+    // Verified aliases of this Vercel project; never trust shared-domain wildcards.
+    'https://agreements.shiftagencyos.com',
+    'https://consent-vault-wine.vercel.app',
+    'https://v0-consentvault-app-shell-eight.vercel.app',
+    'https://consent-vault-shi-ft.vercel.app',
+    'https://consent-vault-git-main-shi-ft.vercel.app',
     ...(process.env.NODE_ENV === 'development'
       ? ['http://localhost:3000', ...[
           process.env.V0_RUNTIME_URL,

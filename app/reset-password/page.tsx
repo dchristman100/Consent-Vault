@@ -114,7 +114,7 @@ function ResetPasswordContent() {
         {!tokenValid && !success ? (
           <>
             <h2 className="text-center text-lg font-bold text-slate-900 mb-2">Invalid Reset Link</h2>
-            <p className="text-center text-sm text-slate-600 leading-relaxed mb-6">{error}</p>
+            <p className="text-center text-sm text-slate-600 leading-relaxed mb-6">This reset link is missing, invalid, or expired. Request a new link below.</p>
             <div className="text-center">
               <Link href="/forgot-password" className="text-sm text-[#2563eb] hover:underline">
                 Request a new password reset
