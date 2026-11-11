@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/vault-client'
 import { useRouter, usePathname } from 'next/navigation'
-import { LogOut, BarChart3, Globe } from 'lucide-react'
+import { LogOut, BarChart3, Globe, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -21,6 +21,7 @@ export function Sidebar() {
   const navItems = [
     { label: 'Sessions', href: '/admin/sessions', icon: BarChart3 },
     { label: 'Sites', href: '/admin/sites', icon: Globe },
+    { label: 'Account', href: '/admin/account', icon: Settings },
   ]
 
   return (

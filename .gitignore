@@ -1,0 +1,7 @@
+.env*
+.next/
+node_modules/
+.vercel/
+user_read_only_context/
+v0_memories/
+*.tsbuildinfo
