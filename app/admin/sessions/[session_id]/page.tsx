@@ -125,7 +125,7 @@ export default function SessionReplayPage() {
 
           // Session fields
           const fields = [
-            ['Session ID', session?.visitor_id || 'N/A'],
+            ['Session ID', session?.session_id || 'N/A'],
             ['Site Name', session?.sites?.site_name || 'N/A'],
             ['Page URL', session?.page_url || 'N/A'],
             ['IP Address', session?.ip_address || 'N/A'],
@@ -244,7 +244,7 @@ export default function SessionReplayPage() {
     try {
       setGeneratingPDF(true)
       const doc = await generatePDF()
-      doc.save(`session-${session?.visitor_id?.slice(0, 8) || 'report'}.pdf`)
+      doc.save(`session-${session?.session_id?.slice(0, 8) || 'report'}.pdf`)
       toast.success('PDF downloaded successfully')
     } catch (err) {
       console.error('[v0] PDF download error:', err)
@@ -286,7 +286,9 @@ export default function SessionReplayPage() {
 
       try {
         // Fetch session metadata
-        const { data: sessionData, error: sessionError } = await vault
+        // The URL id is normally the recording's session_id: what window.ConsentVault.getSessionId() returns and
+        // what host sites store with their leads. Older admin links used the visitor_id, so fall back to that.
+        const lookup = (column: 'session_id' | 'visitor_id') => vault
           .from('sessions')
           .select(
             `
@@ -294,8 +296,10 @@ export default function SessionReplayPage() {
             sites (site_name)
           `
           )
-          .eq('visitor_id', sessionId)
+          .eq(column, sessionId)
           .single()
+        let { data: sessionData, error: sessionError } = await lookup('session_id')
+        if (sessionError || !sessionData) ({ data: sessionData, error: sessionError } = await lookup('visitor_id'))
 
         if (sessionError || !sessionData) {
           setError('Session not found')
@@ -305,9 +309,7 @@ export default function SessionReplayPage() {
 
         setSession(sessionData)
 
-        // The URL param is the visitor_id, but event batches are keyed by the
-        // real session_id (a different UUID). Load batch metadata for the table
-        // display using the real session_id.
+        // Event batches and screenshots are keyed by the session_id, whichever id the URL used.
         const realSessionId = sessionData.session_id
 
         // Fetch the most recent form-submission screenshot for this session.
@@ -729,10 +731,10 @@ export default function SessionReplayPage() {
             <label className="text-sm font-semibold text-slate-600">Session ID</label>
             <div className="flex items-center gap-2 mt-2">
               <code className="flex-1 p-3 bg-slate-100 rounded font-mono text-sm overflow-auto">
-                {session.visitor_id}
+                {session.session_id}
               </code>
               <button
-                onClick={() => copyToClipboard(session.visitor_id)}
+                onClick={() => copyToClipboard(session.session_id)}
                 className="p-2 hover:bg-slate-100 rounded transition"
               >
                 {copied ? <Check size={20} /> : <Copy size={20} />}
@@ -909,7 +911,7 @@ export default function SessionReplayPage() {
       <DeleteSessionDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        sessionLabel={session.visitor_id}
+        sessionLabel={session.session_id}
         onConfirm={handleDeleteSession}
       />
     </div>

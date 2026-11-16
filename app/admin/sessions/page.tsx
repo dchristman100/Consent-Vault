@@ -32,6 +32,7 @@ import { DeleteSessionDialog } from './delete-session-dialog'
 
 interface Session {
   id: string
+  session_id: string
   visitor_id: string
   site_id: string
   page_url: string
@@ -97,7 +98,7 @@ export default function SessionsPage() {
     return data || []
   })
   const sessions = allSessions.filter((session) => {
-    const matchesSearch = !searchTerm || session.visitor_id.includes(searchTerm) || session.page_url?.includes(searchTerm)
+    const matchesSearch = !searchTerm || (session.session_id?.includes(searchTerm) || session.visitor_id?.includes(searchTerm)) || session.page_url?.includes(searchTerm)
     const { from, to } = dateRange
     const started = new Date(session.started_at)
     return matchesSearch && (!from || !to || (started >= from && started <= to))
@@ -293,7 +294,7 @@ export default function SessionsPage() {
                 {sessions.map((session) => (
                   <TableRow key={session.id} className="hover:bg-[#f8fafc] border-b border-[#f1f5f9]">
                     <TableCell className="font-mono text-sm text-slate-900 px-4 py-3.5">
-                      {session.visitor_id?.slice(0, 8) || session.id.slice(0, 8)}
+                      {session.session_id?.slice(0, 8) || session.id.slice(0, 8)}
                     </TableCell>
                     <TableCell className="text-sm text-slate-900 px-4 py-3.5">{session.sites?.site_name || '-'}</TableCell>
                     {/* <TableCell title={session.page_url} className="text-sm text-slate-600 px-4 py-3.5">
@@ -311,7 +312,7 @@ export default function SessionsPage() {
                     <TableCell className="text-sm text-slate-900 font-medium px-4 py-3.5">{session.event_count}</TableCell>
                     <TableCell className="px-4 py-3.5">
                       <div className="flex items-center gap-2">
-                        <Link href={`/admin/sessions/${session.visitor_id}`}>
+                        <Link href={`/admin/sessions/${session.session_id}`}>
                           <Button
                             size="sm"
                             variant="outline"
@@ -345,7 +346,7 @@ export default function SessionsPage() {
         onOpenChange={(open) => {
           if (!open) setSessionToDelete(null)
         }}
-        sessionLabel={sessionToDelete?.visitor_id || ''}
+        sessionLabel={sessionToDelete?.session_id || ''}
         onConfirm={handleDeleteSession}
       />
     </div>
